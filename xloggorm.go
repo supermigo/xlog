@@ -62,6 +62,8 @@ func (g *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql 
 		g.logger.Warnw(sql, "elapsed", elapsed, "rows", rows, "warn", slowLog)
 	case g.logger.Level() < zapcore.InfoLevel:
 		g.logger.Debugw(sql, "elapsed", elapsed, "rows", rows)
+	case g.logger.Level()  == zapcore.InfoLevel:
+		g.logger.Info(sql, zap.Duration("elapsed", elapsed), zap.Int64("rows", rows))
 	}
 }
 
