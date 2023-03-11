@@ -13,6 +13,7 @@ import (
 type GormLogger struct {
 	logger *zap.SugaredLogger
 	gormlog.Config
+	zapLevel zapcore.Level
 }
 
 func (g *GormLogger) LogMode(logLevel gormlog.LogLevel) gormlog.Interface {
@@ -27,10 +28,10 @@ func (g *GormLogger) LogMode(logLevel gormlog.LogLevel) gormlog.Interface {
 	case gormlog.Info:
 		zapLevel = zapcore.InfoLevel
 	}
-	zapLevel = zapLevel
-	//level.SetLevel(zapLevel)
+	g.zapLevel = zapLevel
 	return g
 }
+
 
 func (g *GormLogger) Info(ctx context.Context, s string, i ...interface{}) {
 	//TODO implement me
@@ -46,6 +47,9 @@ func (g *GormLogger) Error(ctx context.Context, s string, i ...interface{}) {
 	//TODO implement me
 	g.logger.Errorf(s, i...)
 }
+func (g*GormLogger) LogLeven() {
+	return g.zapLevel
+}
 
 func (g *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
 	//TODO implement me
@@ -55,14 +59,14 @@ func (g *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql 
 	elapsed := time.Since(begin)
 	sql, rows := fc()
 	switch {
-	case err != nil && g.logger.Level() <= zapcore.ErrorLevel && (!errors.Is(err, gormlog.ErrRecordNotFound) || !g.IgnoreRecordNotFoundError):
+	case err != nil && g.LogLevel() <= zapcore.ErrorLevel && (!errors.Is(err, gormlog.ErrRecordNotFound) || !g.IgnoreRecordNotFoundError):
 		g.logger.Errorw(sql, "elapsed", elapsed, "rows", rows, "error", err.Error())
 	case elapsed > g.SlowThreshold && g.SlowThreshold != 0 && g.logger.Level() >= zapcore.WarnLevel:
 		slowLog := fmt.Sprintf("SLOW SQL >= %v", g.SlowThreshold)
 		g.logger.Warnw(sql, "elapsed", elapsed, "rows", rows, "warn", slowLog)
-	case g.logger.Level() < zapcore.InfoLevel:
+	case g..LogLevel() < zapcore.InfoLevel:
 		g.logger.Debugw(sql, "elapsed", elapsed, "rows", rows)
-	case g.logger.Level()  == zapcore.InfoLevel:
+	case g..LogLevel() == zapcore.InfoLevel:
 		g.logger.Info(sql, zap.Duration("elapsed", elapsed), zap.Int64("rows", rows))
 	}
 }
