@@ -46,6 +46,9 @@ type Option struct {
 	MaxBackups      uint  // 保留旧文件的最大个数，默认7个
 	MaxSize         int64 // 在进行切割之前，日志文件的最大大小（以MB为单位）默认1024
 	Compress        bool  // 是否压缩/归档旧文件
+	WriteFunc       bool
+	WriteFileTag   bool
+
 	packageLogLevel map[string]zapcore.Level
 }
 
@@ -75,7 +78,21 @@ func DefaultOption() *Option {
 		MaxBackups:     3,
 		MaxSize:        1024 * 1024 * 10,
 		Compress:       false,
+		WriteFileTag:   true,
+		WriteFunc:		false,
 	}
+}
+func GetFunctionKey(opt *Option) string{
+	if opt.WriteFunc  {
+		return "func"
+	}
+	return ""
+}
+func GetFileKey(opt *Option)string{
+	if opt.WriteFileTag {
+		return "file"
+	}
+	return ""
 }
 
 func InitLevel(opt *Option) {
@@ -84,8 +101,8 @@ func InitLevel(opt *Option) {
 		LevelKey:       "level",
 		TimeKey:        "time",
 		NameKey:        "logger",
-		CallerKey:      "file",
-		FunctionKey:    "func",
+		CallerKey:      GetFileKey(opt),
+		FunctionKey:    GetFunctionKey(opt),
 		StacktraceKey:  "stack",
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeLevel:    zapcore.CapitalColorLevelEncoder,

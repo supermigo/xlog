@@ -47,7 +47,7 @@ func (g *GormLogger) Error(ctx context.Context, s string, i ...interface{}) {
 	//TODO implement me
 	g.logger.Errorf(s, i...)
 }
-func (g*GormLogger) LogLeven() {
+func (g*GormLogger) LogLevel() zapcore.Level{
 	return g.zapLevel
 }
 
@@ -64,16 +64,18 @@ func (g *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql 
 	case elapsed > g.SlowThreshold && g.SlowThreshold != 0 && g.logger.Level() >= zapcore.WarnLevel:
 		slowLog := fmt.Sprintf("SLOW SQL >= %v", g.SlowThreshold)
 		g.logger.Warnw(sql, "elapsed", elapsed, "rows", rows, "warn", slowLog)
-	case g..LogLevel() < zapcore.InfoLevel:
+	case g.LogLevel() < zapcore.InfoLevel:
 		g.logger.Debugw(sql, "elapsed", elapsed, "rows", rows)
-	case g..LogLevel() == zapcore.InfoLevel:
+	case g.LogLevel() == zapcore.InfoLevel:
 		g.logger.Info(sql, zap.Duration("elapsed", elapsed), zap.Int64("rows", rows))
 	}
 }
 
 func NewGormLogger(conf gormlog.Config) gormlog.Interface {
-	return &GormLogger{
+	result:= &GormLogger{
 		logger: textLogger,
 		Config: conf,
 	}
+	result.LogMode(conf.LogLevel)
+	return result
 }
